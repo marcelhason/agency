@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreStatusRequest;
+use App\Http\Requests\UpdateStatusRequest;
+use App\Http\Resources\Admin\StatusResource;
+use App\Models\Status;
+use Gate;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
+class StatusApiController extends Controller
+{
+    public function index()
+    {
+        abort_if(Gate::denies('status_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return new StatusResource(Status::advancedFilter());
+    }
+
+    public function store(StoreStatusRequest $request)
+    {
+        $status = Status::create($request->validated());
+
+        return (new StatusResource($status))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
+    }
+
+    public function create(Status $status)
+    {
+        abort_if(Gate::denies('status_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return response([
+            'meta' => [],
+        ]);
+    }
+
+    public function show(Status $status)
+    {
+        abort_if(Gate::denies('status_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return new StatusResource($status);
+    }
+
+    public function update(UpdateStatusRequest $request, Status $status)
+    {
+        $status->update($request->validated());
+
+        return (new StatusResource($status))
+            ->response()
+            ->setStatusCode(Response::HTTP_ACCEPTED);
+    }
+
+    public function edit(Status $status)
+    {
+        abort_if(Gate::denies('status_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return response([
+            'data' => new StatusResource($status),
+            'meta' => [],
+        ]);
+    }
+
+    public function destroy(Status $status)
+    {
+        abort_if(Gate::denies('status_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $status->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}
